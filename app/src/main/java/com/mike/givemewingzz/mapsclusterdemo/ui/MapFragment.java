@@ -180,6 +180,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleA
                 fetchMapData(baseModel);
                 onDataComplete();
             }
+
+            @Override
+            public void onResultsQueryLimit(String errorMessage) {
+
+            }
         });
 
         Prefs.with(getActivity()).setPreLoad(true);
@@ -426,6 +431,11 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleA
 
     @Override
     public void onDataComplete() {
+        progressDialog.dismiss();
+    }
+
+    @Override
+    public void onQueryExceeded() {
         progressDialog.dismiss();
     }
 

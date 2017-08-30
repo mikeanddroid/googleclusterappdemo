@@ -12,6 +12,8 @@ public interface UIHandler {
 
     void onDataComplete();
 
+    void onQueryExceeded();
+
     void showMessage(String message);
 
 }

@@ -22,6 +22,7 @@ import retrofit.Retrofit;
 public class FetchBBVAData {
 
     private static final String TAG = FetchBBVAData.class.getSimpleName();
+    private static final String QUERY_LIMIT = "OVER_QUERY_LIMIT";
 
     public void call(final OnResultsComplete onResultsComplete) {
 
@@ -33,6 +34,11 @@ public class FetchBBVAData {
             public void onResponse(final Response<BaseModel> response, Retrofit retrofit) {
 
                 // Todo : If query over limit display dialog on that screen
+                final String responseStatus = response.body().getStatus();
+
+                if (QUERY_LIMIT.equals(responseStatus) || QUERY_LIMIT.contains(responseStatus)) {
+                    onResultsComplete.onResultsQueryLimit(responseStatus);
+                }
 
                 Log.d(TAG, " Response : Size : " + response.body().getResults().size() + " : Response Code : " + response.code());
 
@@ -67,6 +73,11 @@ public class FetchBBVAData {
                         public void onFinished(BaseModel items) {
                             OttoHelper.post(new SuccessEvent(items, response));
                         }
+
+                        @Override
+                        public void onQueryLimit() {
+                            OttoHelper.post(new FailureEvent(responseStatus));
+                        }
                     }, baseModel);
 
                 } catch (NullPointerException npe) {
@@ -86,6 +97,8 @@ public class FetchBBVAData {
 
     public interface OnResultsComplete {
         void onResultsFetched(SearchInteractor.OnSearchFinished listener, BaseModel baseModel);
+
+        void onResultsQueryLimit(String errorMessage);
     }
 
     public static class SuccessEvent {

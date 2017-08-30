@@ -29,4 +29,9 @@ public class SearchInteractorImplementation implements SearchInteractor, FetchBB
         Log.d(TAG, " SearchInteractorImplementation Results : Size : " + model.getStatus());
         listener.onFinished(model);
     }
+
+    @Override
+    public void onResultsQueryLimit(String errorMessage) {
+
+    }
 }

@@ -60,4 +60,12 @@ public class ActionPresenterImplementation implements ActionPresenter, SearchInt
             uiHandler.hideProgress();
         }
     }
+
+    @Override
+    public void onQueryLimit() {
+        if (uiHandler != null) {
+            uiHandler.hideProgress();
+            uiHandler.onQueryExceeded();
+        }
+    }
 }

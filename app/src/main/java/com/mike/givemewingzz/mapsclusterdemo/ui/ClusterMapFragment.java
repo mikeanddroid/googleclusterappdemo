@@ -1,7 +1,9 @@
 package com.mike.givemewingzz.mapsclusterdemo.ui;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -195,6 +197,36 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
                 fetchMapData(baseModel);
                 onDataComplete();
             }
+
+            @Override
+            public void onResultsQueryLimit(String errorMessage) {
+                onQueryExceeded();
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+                alertDialogBuilder.setMessage("Query Limit Exceeded");
+                alertDialogBuilder.setCancelable(false);
+
+                alertDialogBuilder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        getActivity().finish();
+                    }
+                });
+
+                AlertDialog alertDialog = alertDialogBuilder.create();
+
+                if (!alertDialog.isShowing()) {
+                    if (isVisible()) {
+
+                        if (alertDialog.isShowing()) {
+                            alertDialog.dismiss();
+                        }
+                        alertDialog.show();
+
+                    }
+                }
+
+            }
         });
 
         Prefs.with(getActivity()).setPreLoad(true);
@@ -315,7 +347,15 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
     @Override
     public void showProgress() {
-        progressDialog.show();
+
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.hide();
+        }
+
+        if (progressDialog != null) {
+            progressDialog.show();
+        }
+
     }
 
     @Override
@@ -331,6 +371,11 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
     @Override
     public void onDataComplete() {
+        progressDialog.dismiss();
+    }
+
+    @Override
+    public void onQueryExceeded() {
         progressDialog.dismiss();
     }
 
@@ -420,13 +465,13 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             // Draw multiple people.
             // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
 //            List<Drawable> drawables = new ArrayList<Drawable>(Math.min(2, cluster.getSize()));
-            List<Drawable> drawables = new ArrayList<Drawable>(cluster.getSize());
+            List<Drawable> drawables = new ArrayList<Drawable>(getMinClusterSize());
             int width = mDimension;
             int height = mDimension;
 
             for (Results results : cluster.getItems()) {
                 // Draw 4 at most.
-                if (drawables.size() == 2) break;
+                if (drawables.size() == 4) break;
 //                Drawable drawable = getResources().getDrawable(results.profilePhoto);
                 Drawable drawable = getResources().getDrawable(R.drawable.rectangle_shape);
                 drawable.setBounds(0, 0, width, height);

@@ -1,7 +1,9 @@
 package com.mike.givemewingzz.mapsclusterdemo.ui;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -177,6 +179,32 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
     @Subscribe
     public void onResultFailure(FetchBBVAData.FailureEvent failureEvent) {
         Log.d(TAG, " onResultFailure : Base Model : Status : " + failureEvent.getErrorMessage());
+
+        onQueryExceeded();
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+        alertDialogBuilder.setMessage("Query Limit Exceeded");
+        alertDialogBuilder.setCancelable(false);
+
+        alertDialogBuilder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                getActivity().finish();
+            }
+        });
+
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        if (isVisible()) {
+            if (alertDialog != null && alertDialog.isShowing()) {
+                alertDialog.dismiss();
+            }
+
+            if (alertDialog != null) {
+                alertDialog.show();
+            }
+        }
+
     }
 
     private void setupRecyclerView() {
@@ -210,9 +238,17 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
 
     @Override
     public void showProgress() {
-        if (isAdded()) {
-            progressDialog.show();
+
+        if (isVisible()) {
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.hide();
+            }
+
+            if (progressDialog != null) {
+                progressDialog.show();
+            }
         }
+
     }
 
     @Override
@@ -222,6 +258,11 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
 
     @Override
     public void onDataComplete() {
+        progressDialog.dismiss();
+    }
+
+    @Override
+    public void onQueryExceeded() {
         progressDialog.dismiss();
     }
 
