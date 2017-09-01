@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.MarkerManager;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
@@ -47,8 +48,10 @@ import com.mike.givemewingzz.mapsclusterdemo.service.RealmController;
 import com.mike.givemewingzz.mapsclusterdemo.utils.Prefs;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import io.realm.Realm;
@@ -241,6 +244,26 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
         if (googleMapView == null) {
             googleMapView = getMap();
         }
+
+        googleMapView.clear();
+
+        mClusterManager = new ClusterManager<Results>(getActivity(), googleMapView);
+        mClusterManager.setRenderer(new LocationRenderer());
+        getMap().setOnCameraIdleListener(mClusterManager);
+        getMap().setOnMarkerClickListener(mClusterManager);
+        getMap().setOnInfoWindowClickListener(mClusterManager);
+        mClusterManager.setOnClusterClickListener(this);
+        mClusterManager.setOnClusterInfoWindowClickListener(this);
+        mClusterManager.setOnClusterItemClickListener(this);
+        mClusterManager.setOnClusterItemInfoWindowClickListener(this);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                addItems();
+                mClusterManager.cluster();
+            }
+        }, 1000);
 
         RealmList<Results> resultsRealmList = mapBaseModel.getResults();
         ArrayList<Marker> markers = new ArrayList<>();
@@ -441,7 +464,9 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
                 drawable.setBounds(0, 0, width, height);
                 drawables.add(drawable);
 
-                Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).into(mImageView);
+//                Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).into(mImageView);
+
+                reloadMarker(results);
 
             }
             MultiDrawable multiDrawable = new MultiDrawable(drawables);
@@ -487,6 +512,35 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
         return true;
     }
 
+    public void reloadMarker(Results results) {
+
+        MarkerManager.Collection mc = mClusterManager.getMarkerCollection();
+
+        Collection<Marker> markerCollection = mc.getMarkers();
+
+        for (final Marker marker : markerCollection) {
+
+            Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).into(new Target() {
+                @Override
+                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                }
+
+                @Override
+                public void onBitmapFailed(Drawable errorDrawable) {
+
+                }
+
+                @Override
+                public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                }
+            });
+
+        }
+
+    }
+
     @Override
     public void onClusterInfoWindowClick(Cluster<Results> cluster) {
         // Does nothing, but you could go to a list of the users.
@@ -530,25 +584,9 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             googleMapView = googleMap;
         }
 
+        googleMapView.clear();
+
         googleMapView.moveCamera(CameraUpdateFactory.newLatLngZoom(googleMapView.getCameraPosition().target, 9.5f));
-
-        mClusterManager = new ClusterManager<Results>(getActivity(), googleMapView);
-        mClusterManager.setRenderer(new LocationRenderer());
-        getMap().setOnCameraIdleListener(mClusterManager);
-        getMap().setOnMarkerClickListener(mClusterManager);
-        getMap().setOnInfoWindowClickListener(mClusterManager);
-        mClusterManager.setOnClusterClickListener(this);
-        mClusterManager.setOnClusterInfoWindowClickListener(this);
-        mClusterManager.setOnClusterItemClickListener(this);
-        mClusterManager.setOnClusterItemInfoWindowClickListener(this);
-
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                addItems();
-                mClusterManager.cluster();
-            }
-        }, 1000);
 
     }
 
