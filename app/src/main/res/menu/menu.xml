@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.example.riyaz.bbva_compass_project.MainActivity">
     <item
-        android:id="@+id/maps_item"
-        android:title="Maps" />
-    <item
-        android:id="@+id/list_item"
-        android:title="List View" />
+        android:id="@+id/search_places"
+        android:icon="@drawable/ic_action_search"
+        android:orderInCategory="100"
+        android:title="Search"
+        app:showAsAction="always" />
 </menu>

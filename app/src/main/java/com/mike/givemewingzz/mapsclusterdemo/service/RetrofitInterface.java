@@ -19,4 +19,10 @@ public interface RetrofitInterface {
     @GET("/maps/api/place/textsearch/json?query=BBVACompass&location=MY_LAT,MY_LAT&radius=10000")
     Call<BaseModel> getBBVALocations(@Query("key") String API_KEY);
 
+    @GET("/maps/api/place/textsearch/json?location=MY_LAT,MY_LAT&radius=10000")
+    Call<BaseModel> getSearchedLocations(@Query("query") String searchValue, @Query("key") String API_KEY);
+
+    @GET("/maps/api/place/photo/")
+    Call<BaseModel> getSearchedLocationImages(@Query("parameters") String photoReference, @Query("key") String API_KEY);
+
 }

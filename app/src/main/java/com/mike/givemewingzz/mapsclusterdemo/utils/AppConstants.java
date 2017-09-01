@@ -3,10 +3,11 @@ package com.mike.givemewingzz.mapsclusterdemo.utils;
 public class AppConstants {
 
     public static class API_KEYS {
-        public static final String MAP_API_KEY = "AIzaSyDQCquagcBx6Cek_39NbW-1j6qC3QCVgmo";
+        public static final String MAP_API_KEY = "AIzaSyAJUm4b8fflXMVmk0ddpX2gwOq-pUzEdeE";
     }
 
     public static final String BASE_URL = "https://maps.googleapis.com";
+    public static final String BASE_IMAGE_URL = "https://maps.googleapis.com";
 
     // Intent Keys
     public static final String IMAGE_URL_KEY = "IMAGE_URL_KEY";

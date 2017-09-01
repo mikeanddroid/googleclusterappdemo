@@ -20,7 +20,7 @@
     <dimen name="ic_album_overflow_height">30dp</dimen>
     <dimen name="ic_album_overflow_margin_top">10dp</dimen>
 
-    <dimen name="custom_profile_image">80dp</dimen>
+    <dimen name="custom_map_marker_image">60dp</dimen>
     <dimen name="custom_profile_padding">8dp</dimen>
 
 </resources>

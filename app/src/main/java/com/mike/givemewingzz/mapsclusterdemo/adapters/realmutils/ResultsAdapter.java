@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.mike.givemewingzz.mapsclusterdemo.R;
+import com.mike.givemewingzz.mapsclusterdemo.model.data.BaseModel;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.Geometry;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.Location;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.Results;
@@ -37,6 +38,7 @@ public class ResultsAdapter extends RealmRecyclerViewAdapter<Results> {
 
     public ResultsAdapter(Context context) {
         this.context = context;
+        realm = RealmController.getInstance().getRealm();
     }
 
     public void setEventListener(EventListener eventListener) {
@@ -53,8 +55,6 @@ public class ResultsAdapter extends RealmRecyclerViewAdapter<Results> {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, final int position) {
-
-        realm = RealmController.getInstance().getRealm();
 
         // get Results
         final Results results = getItem(position);
@@ -140,6 +140,16 @@ public class ResultsAdapter extends RealmRecyclerViewAdapter<Results> {
             detailsContiner = (LinearLayout) view.findViewById(R.id.locationContainer);
             locationRating = (TextView) view.findViewById(R.id.locationRating);
         }
+
+    }
+
+    public void swapData(BaseModel baseModel) {
+
+        if (baseModel == null || baseModel.getResults().size() == 0) {
+            return;
+        }
+
+        getRealmAdapter().updateData(baseModel.getResults());
 
     }
 

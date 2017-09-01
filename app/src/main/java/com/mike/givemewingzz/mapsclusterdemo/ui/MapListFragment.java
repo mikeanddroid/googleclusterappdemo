@@ -37,6 +37,8 @@ import com.squareup.otto.Subscribe;
 
 import java.util.Random;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
@@ -50,11 +52,12 @@ import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_
 /**
  * Created by GiveMeWingzz on 8/25/2017.
  */
-public class MapListFragment extends Fragment implements LocationListAdapter.EventListener, UIHandler, ResultsAdapter.EventListener {
+public class MapListFragment extends Fragment implements UIHandler {
 
     public static final String TAG = MapListFragment.class.getSimpleName();
 
-    private RecyclerView recyclerView;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
 
     private LocationListAdapter locationListAdapter;
     protected Realm realm;
@@ -66,6 +69,8 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
 
     ClusterManager<Location> locationClusterManager;
     private Random random = new Random(1984);
+
+    private StaggeredGridLayoutManager staggeredGridLayoutManager;
 
     public static MapListFragment newInstance() {
         return new MapListFragment();
@@ -99,7 +104,12 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.list_fragment, container, false);
-        recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+
+        staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+
+        ButterKnife.bind(this, view);
+
+        recyclerView.setLayoutManager(staggeredGridLayoutManager);
 
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setMessage("Fetching Data");
@@ -208,32 +218,18 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
     }
 
     private void setupRecyclerView() {
-        final StaggeredGridLayoutManager staggeredGridLayoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(staggeredGridLayoutManager);
-
         resultsAdapter = new ResultsAdapter(getActivity());
         recyclerView.setAdapter(resultsAdapter);
+    }
+
+    public void refreshListItems(BaseModel baseModel) {
+        ResultsAdapter resultsAdapter = new ResultsAdapter(getActivity());
+        resultsAdapter.swapData(baseModel);
     }
 
     private void setResultsData() {
         presenter.onResultsFetch();
         Prefs.with(getActivity()).setPreLoad(true);
-    }
-
-    @Override
-    public void onItemClick(final int position, Results results) {
-
-        // Navigate to details view
-        Intent detailsIntent = new Intent(getActivity(), MapLocationDetails.class);
-        detailsIntent.putExtra(IMAGE_URL_KEY, results.getIcon());
-        detailsIntent.putExtra(LOCATION_GEO_KEY, results.getGeometry().getPlaceLocation().toString());
-        detailsIntent.putExtra(LOCATION_NAME_KEY, results.getLocationName());
-        detailsIntent.putExtra(LOCATION_ADDRESS_KEY, results.getFormattedAddress());
-        detailsIntent.putExtra(LOCATION_RATING_KEY, results.getRating());
-        getActivity().startActivity(detailsIntent);
-
-        presenter.onItemClicked(position);
-
     }
 
     @Override
@@ -273,6 +269,10 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
             @Override
             public void run() {
 
+                if (realm == null) {
+                    realm = RealmController.with(getActivity()).getRealm();
+                }
+
                 RealmList<Results> resultsRealmList = null;
                 if (items != null) {
                     Log.d(TAG, " Fragment : Base Model : MVP : Status : " + items.getStatus());
@@ -309,7 +309,26 @@ public class MapListFragment extends Fragment implements LocationListAdapter.Eve
     public void setRealmAdapter(RealmResults<Results> realmResults) {
 
         RealmResultsAdapter realmResultsAdapter = new RealmResultsAdapter(realmResults);
-        resultsAdapter.setEventListener(this);
+
+        if (resultsAdapter == null) {
+            resultsAdapter = new ResultsAdapter(getActivity());
+        }
+
+        resultsAdapter.setEventListener(new ResultsAdapter.EventListener() {
+            @Override
+            public void onItemClick(int position, Results results) {
+                // Navigate to details view
+                Intent detailsIntent = new Intent(getActivity(), MapLocationDetails.class);
+                detailsIntent.putExtra(IMAGE_URL_KEY, results.getIcon());
+                detailsIntent.putExtra(LOCATION_GEO_KEY, results.getGeometry().getPlaceLocation().toString());
+                detailsIntent.putExtra(LOCATION_NAME_KEY, results.getLocationName());
+                detailsIntent.putExtra(LOCATION_ADDRESS_KEY, results.getFormattedAddress());
+                detailsIntent.putExtra(LOCATION_RATING_KEY, results.getRating());
+                getActivity().startActivity(detailsIntent);
+
+                presenter.onItemClicked(position);
+            }
+        });
         resultsAdapter.setRealmAdapter(realmResultsAdapter);
         resultsAdapter.notifyDataSetChanged();
 

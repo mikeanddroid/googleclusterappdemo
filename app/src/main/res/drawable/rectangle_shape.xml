@@ -16,7 +16,7 @@
             <corners android:radius="5dp" />
             <stroke android:width="4dp" android:color="#20a5ca" />
             <!-- Set the same value for both width and height to get a circular shape -->
-            <size android:width="@dimen/custom_profile_image" android:height="@dimen/custom_profile_image" />
+            <size android:width="@dimen/custom_map_marker_image" android:height="@dimen/custom_map_marker_image" />
         </shape>
     </item>
 </selector>

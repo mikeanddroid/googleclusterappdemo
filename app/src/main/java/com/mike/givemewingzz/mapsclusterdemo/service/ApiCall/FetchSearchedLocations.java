@@ -18,18 +18,23 @@ import retrofit.Callback;
 import retrofit.Response;
 import retrofit.Retrofit;
 
-public class FetchBBVAData {
+/**
+ * Created by GiveMeWingzz on 8/31/2017.
+ */
 
-    private static final String TAG = FetchBBVAData.class.getSimpleName();
+public class FetchSearchedLocations {
+
+    private static final String TAG = FetchSearchedLocations.class.getSimpleName();
     private static final String QUERY_LIMIT = "OVER_QUERY_LIMIT";
 
-    public void call(final OnResultsComplete onResultsComplete) {
+    public void call(String searchQuery, final OnResultsComplete onResultsComplete) {
 
-        Log.d(TAG, " Response call : FetchBBVAData");
+        Log.d(TAG, " Response call : FetchSearchedLocations");
 
         RetrofitInterface retrofitInterface = BaseClient.getBBSIClient();
 
-        Call<BaseModel> call = retrofitInterface.getBBVALocations(AppConstants.API_KEYS.MAP_API_KEY);
+        Call<BaseModel> call = retrofitInterface.getSearchedLocations(searchQuery, AppConstants.API_KEYS.MAP_API_KEY);
+
         call.enqueue(new Callback<BaseModel>() {
             @Override
             public void onResponse(final Response<BaseModel> response, Retrofit retrofit) {
@@ -50,7 +55,7 @@ public class FetchBBVAData {
                 Log.d(TAG, " Response Results : Size : " + resultSize);
 
                 for (int i = 0; i < resultSize; i++) {
-                    Log.d(TAG, "Fetch BBVA Data Results : Formatted Address :" + resultsList.get(i).getFormattedAddress());
+                    Log.d(TAG, "Fetch FetchSearchedLocations Data Results : Formatted Address :" + resultsList.get(i).getFormattedAddress());
                 }
 
                 try {
@@ -59,9 +64,12 @@ public class FetchBBVAData {
 
                     final BaseModel baseModel = response.body();
                     realm.beginTransaction();
-                    realm.deleteAll();
 
                     if (baseModel != null) {
+
+                        realm.delete(BaseModel.class);
+                        realm.delete(Results.class);
+
                         realm.copyToRealm(baseModel);
                         realm.copyToRealmOrUpdate(resultsList);
                     }
@@ -71,12 +79,12 @@ public class FetchBBVAData {
                     onResultsComplete.onResultsFetched(new SearchInteractor.OnSearchFinished() {
                         @Override
                         public void onFinished(BaseModel items) {
-                            OttoHelper.post(new SuccessEvent(items, response));
+                            OttoHelper.post(new SeachedSuccessEvent(items, response));
                         }
 
                         @Override
                         public void onQueryLimit() {
-                            OttoHelper.post(new FailureEvent(responseStatus));
+                            OttoHelper.post(new SearchedFailureEvent(responseStatus));
                         }
                     }, baseModel);
 
@@ -88,8 +96,7 @@ public class FetchBBVAData {
 
             @Override
             public void onFailure(Throwable t) {
-                Log.e(TAG, " Response Failure : " + t.getLocalizedMessage());
-                OttoHelper.post(new FailureEvent(t.getMessage()));
+
             }
         });
 
@@ -101,11 +108,11 @@ public class FetchBBVAData {
         void onResultsQueryLimit(String errorMessage);
     }
 
-    public static class SuccessEvent {
+    public static class SeachedSuccessEvent {
         private BaseModel baseModel;
         private Response response;
 
-        private SuccessEvent(BaseModel baseModel, Response response) {
+        private SeachedSuccessEvent(BaseModel baseModel, Response response) {
             this.baseModel = baseModel;
             this.response = response;
         }
@@ -119,11 +126,11 @@ public class FetchBBVAData {
         }
     }
 
-    public static class FailureEvent {
+    public static class SearchedFailureEvent {
 
         private String errorMessage;
 
-        private FailureEvent(String errorMessage) {
+        private SearchedFailureEvent(String errorMessage) {
             this.errorMessage = errorMessage;
         }
 

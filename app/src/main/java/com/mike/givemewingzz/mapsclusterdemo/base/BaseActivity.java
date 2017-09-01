@@ -1,24 +1,37 @@
 package com.mike.givemewingzz.mapsclusterdemo.base;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.PopupMenu;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mike.givemewingzz.mapsclusterdemo.R;
+import com.mike.givemewingzz.mapsclusterdemo.model.data.BaseModel;
+import com.mike.givemewingzz.mapsclusterdemo.presenter.SearchInteractor;
+import com.mike.givemewingzz.mapsclusterdemo.service.ApiCall.FetchSearchedLocations;
 import com.mike.givemewingzz.mapsclusterdemo.service.OttoHelper;
 import com.mike.givemewingzz.mapsclusterdemo.ui.ClusterMapFragment;
 import com.mike.givemewingzz.mapsclusterdemo.ui.MapListFragment;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu;
 import com.oguzdev.circularfloatingactionmenu.library.SubActionButton;
+import com.squareup.otto.Subscribe;
 import com.transitionseverywhere.Fade;
 import com.transitionseverywhere.Slide;
 import com.transitionseverywhere.TransitionManager;
@@ -27,7 +40,7 @@ import com.transitionseverywhere.TransitionSet;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class BaseActivity extends AppCompatActivity implements View.OnClickListener {
+public class BaseActivity extends AppCompatActivity implements View.OnClickListener, MaterialSearchBar.OnSearchActionListener, PopupMenu.OnMenuItemClickListener {
 
     private static final String TAG = BaseActivity.class.getSimpleName();
 
@@ -48,12 +61,37 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     @BindView(R.id.listFragment)
     ViewGroup listBaseHolder;
 
+    @BindView(R.id.searchBar)
+    MaterialSearchBar materialSearchBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+
+        if (getActionBar() != null) {
+            getActionBar().hide();
+        }
+
         setContentView(R.layout.activity_base);
 
         ButterKnife.bind(this);
+
+        // Start Search bar
+
+        materialSearchBar.setHint("Search places e.g. starbucks");
+        materialSearchBar.setSpeechMode(true);
+
+        //enable searchbar callbacks
+        materialSearchBar.setOnSearchActionListener(this);
+        //Inflate menu and setup OnMenuItemClickListener
+        materialSearchBar.inflateMenu(R.menu.menu);
+        materialSearchBar.getMenu().setOnMenuItemClickListener(this);
+
+        materialSearchBar.setCardViewElevation(10);
+
+        // End Search Bar
 
         // Setup floating action button
         setupFloatingActionButton();
@@ -71,39 +109,83 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
         setSlideAnimation(mapBaseHolder);
         setFadeAnimation(mapBaseHolder);
 
+        materialSearchBar.addTextChangeListener(new TextWatcher() {
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                Log.d(TAG, getClass().getSimpleName() + "beforeTextChanged : " + materialSearchBar.getText());
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                if (s.length() > 3) {
+                    Log.d(TAG, getClass().getSimpleName() + "onTextChanged : " + s);
+                } else {
+                    Log.d(TAG, getClass().getSimpleName() + "onTextChanged : Length less than 3 : Get detault search " + materialSearchBar.getText());
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+                if (s.length() > 3) {
+
+                    Log.d(TAG, getClass().getSimpleName() + "afterTextChanged : " + materialSearchBar.getText());
+
+                    FetchSearchedLocations fetchSearchedLocations = new FetchSearchedLocations();
+                    fetchSearchedLocations.call(s.toString().trim(), new FetchSearchedLocations.OnResultsComplete() {
+                        @Override
+                        public void onResultsFetched(SearchInteractor.OnSearchFinished listener, BaseModel baseModel) {
+
+//                            MapListFragment.newInstance().setItems(baseModel);
+
+                            clusterMapFragment.fetchMapData(baseModel);
+                            clusterMapFragment.onDataComplete();
+                        }
+
+                        @Override
+                        public void onResultsQueryLimit(String errorMessage) {
+
+                            clusterMapFragment.onQueryExceeded();
+                            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(BaseActivity.this);
+                            alertDialogBuilder.setMessage("Query Limit Exceeded");
+                            alertDialogBuilder.setCancelable(false);
+
+                            alertDialogBuilder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    BaseActivity.this.finish();
+                                }
+                            });
+
+                            AlertDialog alertDialog = alertDialogBuilder.create();
+
+                            if (!alertDialog.isShowing()) {
+                                if (!isFinishing()) {
+
+                                    if (alertDialog.isShowing()) {
+                                        alertDialog.dismiss();
+                                    }
+                                    alertDialog.show();
+
+                                }
+                            }
+
+                        }
+                    });
+
+                } else {
+                    Log.d(TAG, getClass().getSimpleName() + "afterTextChanged : Length less than 3 : Get detault search " + materialSearchBar.getText());
+                }
+
+            }
+        });
+
         // Hide List Fragment by default
         getSupportFragmentManager().beginTransaction().hide(listFragment).commit();
 
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        // Toggle visibility for map_abs_layout and list
-        if (item.getItemId() == R.id.maps_item) {
-
-            setSlideAnimation(mapBaseHolder);
-            setFadeAnimation(mapBaseHolder);
-
-            getSupportFragmentManager().beginTransaction().show(clusterMapFragment).commit();
-            getSupportFragmentManager().beginTransaction().hide(listFragment).commit();
-
-        } else {
-
-            setSlideAnimation(listBaseHolder);
-            setFadeAnimation(listBaseHolder);
-
-            getSupportFragmentManager().beginTransaction().hide(clusterMapFragment).commit();
-            getSupportFragmentManager().beginTransaction().show(listFragment).commit();
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -128,6 +210,57 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
         // Register Otto
         OttoHelper.register(this);
         super.onResume();
+    }
+
+    @Subscribe
+    public void onResultSuccess(FetchSearchedLocations.SeachedSuccessEvent successEvent) {
+        Log.d(TAG, "onResultSuccess : " + TAG + " : Status : " + successEvent.getBaseModel().getStatus());
+//        clusterMapFragment.fetchMapData(successEvent.getBaseModel());
+    }
+
+    @Subscribe
+    public void onResultFailure(FetchSearchedLocations.SearchedFailureEvent failureEvent) {
+        Log.d(TAG, "onResultSuccess  : " + TAG + " : Status : " + failureEvent);
+        Toast.makeText(this, "BaseActivity : Failed to retrieve data .. \n" + failureEvent.getErrorMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+
+        MenuItem menuItem = menu.findItem(R.id.search_places);
+
+        return true;
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        if (v.getTag().equals(IN_LIST_TAG)) {
+
+            setSlideAnimation(mapBaseHolder);
+            setFadeAnimation(mapBaseHolder);
+
+            if (actionMenu.isOpen()) {
+                actionMenu.close(true);
+            }
+
+            getSupportFragmentManager().beginTransaction().hide(clusterMapFragment).commit();
+            getSupportFragmentManager().beginTransaction().show(listFragment).commit();
+
+        } else if (v.getTag().equals(IN_MAP_TAG)) {
+
+            setSlideAnimation(listBaseHolder);
+            setFadeAnimation(listBaseHolder);
+
+            if (actionMenu.isOpen()) {
+                actionMenu.close(true);
+            }
+
+            getSupportFragmentManager().beginTransaction().show(clusterMapFragment).commit();
+            getSupportFragmentManager().beginTransaction().hide(listFragment).commit();
+        }
+
     }
 
     private void setSlideAnimation(ViewGroup container) {
@@ -189,33 +322,25 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
         mapsView.setBackgroundResource(R.drawable.common_google_signin_btn_icon_light);
 
         ImageView arrangeInGrid = new ImageView(this);
-        arrangeInGrid.setBackgroundResource(R.drawable.ic_menu_list);
-
-        ImageView searchImage = new ImageView(this);
-        searchImage.setBackgroundResource(android.R.drawable.ic_search_category_default);
+        arrangeInGrid.setBackgroundResource(R.drawable.ic_dashboard_black_24dp);
 
         SubActionButton.Builder itemBuilder = new SubActionButton.Builder(this);
 
         SubActionButton inMap = itemBuilder.setContentView(mapsView).build();
         SubActionButton inList = itemBuilder.setContentView(arrangeInGrid).build();
-        SubActionButton inSearch = itemBuilder.setContentView(searchImage).build();
 
         inMap.setPadding(4, 4, 4, 4);
         inList.setPadding(4, 4, 4, 4);
-        inSearch.setPadding(4, 4, 4, 4);
 
         inMap.setTag(IN_MAP_TAG);
         inList.setTag(IN_LIST_TAG);
-        inSearch.setTag(IN_SEARCH_TAG);
 
         inMap.setOnClickListener(this);
         inList.setOnClickListener(this);
-        inSearch.setOnClickListener(this);
 
         actionMenu = new FloatingActionMenu.Builder(this)
                 .addSubActionView(inMap)
                 .addSubActionView(inList)
-                .addSubActionView(inSearch)
                 .attachTo(actionButton)
                 .build();
 
@@ -224,33 +349,31 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View v) {
+    public void onSearchStateChanged(boolean enabled) {
+        String s = enabled ? "enabled" : "disabled";
+        Toast.makeText(BaseActivity.this, "Search " + s, Toast.LENGTH_SHORT).show();
+    }
 
-        if (v.getTag().equals(IN_LIST_TAG)) {
+    @Override
+    public void onSearchConfirmed(CharSequence text) {
 
-            setSlideAnimation(mapBaseHolder);
-            setFadeAnimation(mapBaseHolder);
+    }
 
-            if (actionMenu.isOpen()) {
-                actionMenu.close(true);
-            }
-
-            getSupportFragmentManager().beginTransaction().hide(clusterMapFragment).commit();
-            getSupportFragmentManager().beginTransaction().show(listFragment).commit();
-
-        } else if (v.getTag().equals(IN_MAP_TAG)) {
-
-            setSlideAnimation(listBaseHolder);
-            setFadeAnimation(listBaseHolder);
-
-            if (actionMenu.isOpen()) {
-                actionMenu.close(true);
-            }
-
-            getSupportFragmentManager().beginTransaction().show(clusterMapFragment).commit();
-            getSupportFragmentManager().beginTransaction().hide(listFragment).commit();
-        } else if (v.getTag().equals(IN_SEARCH_TAG)) {
-            // Todo : open search tab and create request
+    @Override
+    public void onButtonClicked(int buttonCode) {
+        switch (buttonCode) {
+            case MaterialSearchBar.BUTTON_NAVIGATION:
+                break;
+            case MaterialSearchBar.BUTTON_SPEECH:
+                break;
+            case MaterialSearchBar.VIEW_INVISIBLE:
+                materialSearchBar.disableSearch();
+                break;
         }
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        return false;
     }
 }

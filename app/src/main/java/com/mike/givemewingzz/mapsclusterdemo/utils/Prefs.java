@@ -10,7 +10,7 @@ import android.content.SharedPreferences;
 public class Prefs {
 
     private static final String PRE_LOAD = "preLoad";
-    private static final String PREFS_NAME = "prefs";
+    private static final String PREFS_NAME = "mapsclusterdemo";
     private static Prefs instance;
     private final SharedPreferences sharedPreferences;
 

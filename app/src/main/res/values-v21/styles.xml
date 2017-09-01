@@ -1,18 +1,45 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
-        <item name="android:statusBarColor">@android:color/transparent</item>
-
-        <item name="windowNoTitle">true</item>
-        <item name="windowActionBar">false</item>
-        <item name="android:windowFullscreen">true</item>
-
     </style>
+
+    <style name="NoActionBar" parent="AppTheme">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!--<style name="MyCustomTheme" parent="AppTheme">-->
+    <!--<item name="searchBarColor">#ffffff</item>-->
+    <!--<item name="dividerColor">#1FFFFFFF</item>-->
+    <!--<item name="navIconTint">#3a3a3a</item>-->
+    <!--<item name="searchIconTint">#3a3a3a</item>-->
+    <!--<item name="clearIconTint">#3a3a3a</item>-->
+    <!--<item name="menuIconTint">#3a3a3a</item>-->
+    <!--<item name="backIconTint">#3a3a3a</item>-->
+    <!--<item name="textCursorTint">#8000a1ff</item>-->
+    <!--<item name="textColor">#DE000000</item>-->
+    <!--<item name="hintColor">#42000000</item>-->
+    <!--<item name="placeholderColor">#8A000000</item>-->
+    <!--<item name="highlightedTextColor">#8000a1ff</item>-->
+    <!--<item name="leftTextSelectorTint">#00a1ff</item>-->
+    <!--<item name="middleTextSelectorTint">#00a1ff</item>-->
+    <!--<item name="rightTextSelectorTint">#00a1ff</item>-->
+    <!--<item name="leftTextSelectorDrawable">-->
+    <!--@drawable/text_select_handle_left_mtrl_alpha_mtrlsearch-->
+    <!--</item>-->
+    <!--<item name="middleTextSelectorDrawable">-->
+    <!--@drawable/text_select_handle_middle_mtrl_alpha_mtrlsearch-->
+    <!--</item>-->
+    <!--<item name="rightTextSelectorDrawable">-->
+    <!--@drawable/text_select_handle_right_mtrl_alpha_mtrlsearch-->
+    <!--</item>-->
+    <!--<item name="handlesTintEnabled">true</item>-->
+    <!--</style>-->
 
 </resources>

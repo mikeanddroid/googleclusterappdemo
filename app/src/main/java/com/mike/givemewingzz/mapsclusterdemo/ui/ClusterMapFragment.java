@@ -47,7 +47,6 @@ import com.mike.givemewingzz.mapsclusterdemo.service.RealmController;
 import com.mike.givemewingzz.mapsclusterdemo.utils.Prefs;
 import com.squareup.otto.Subscribe;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,23 +141,23 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
         OttoHelper.register(this);
         presenter.onResume();
 
-        BaseModel model = null;
-        if (!Prefs.with(getActivity()).getPreLoad()) {
-            model = RealmController.with(getActivity()).getBaseModel();
-
-            if (model != null) {
-                Log.d(TAG, "onResume : ClusterMapFragment : Status : Pre-loaded CACHED " + model.getStatus());
-                this.mapBaseModel = model;
-            } else {
-                Log.d(TAG, "onResume : ClusterMapFragment : Status : Pre-loaded NOT CACHED : Network Call");
-                getResultsData();
-            }
-
-        } else {
-            Log.d(TAG, "onResume : ClusterMapFragment : Status : NETWORK CALL");
-            // Create default request for fetching bbva details
-            getResultsData();
-        }
+//        BaseModel model = null;
+//        if (!Prefs.with(getActivity()).getPreLoad()) {
+//            model = RealmController.with(getActivity()).getBaseModel();
+//
+//            if (model != null) {
+//                Log.d(TAG, "onResume : ClusterMapFragment : Status : Pre-loaded CACHED " + model.getStatus());
+//                this.mapBaseModel = model;
+//            } else {
+//                Log.d(TAG, "onResume : ClusterMapFragment : Status : Pre-loaded NOT CACHED : Network Call");
+//                getResultsData();
+//            }
+//
+//        } else {
+//            Log.d(TAG, "onResume : ClusterMapFragment : NO PRELOAD : Status : NETWORK CALL");
+//            // Create default request for fetching bbva details
+//            getResultsData();
+//        }
 
         super.onResume();
     }
@@ -233,57 +232,20 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
     }
 
-    private class PicassoMarker implements Target {
-
-        Marker mMarker;
-
-        PicassoMarker(Marker marker) {
-            mMarker = marker;
-
-        }
-
-        @Override
-        public int hashCode() {
-            return mMarker.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o instanceof PicassoMarker) {
-                Marker marker = ((PicassoMarker) o).mMarker;
-                return mMarker.equals(marker);
-            } else {
-                return false;
-            }
-        }
-
-        @Override
-        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-            mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-        }
-
-        @Override
-        public void onBitmapFailed(Drawable errorDrawable) {
-            Log.d("test: ", "bitmap fail");
-        }
-
-        @Override
-        public void onPrepareLoad(Drawable placeHolderDrawable) {
-        }
-    }
-
     public void fetchMapData(BaseModel baseModel) {
 
-        Log.d(TAG, " Fragment MAP: fetchMapData : Status : " + baseModel.getStatus());
+        this.mapBaseModel = baseModel;
+
+        Log.d(TAG, " Fragment MAP: fetchMapData : Status : " + mapBaseModel.getStatus());
 
         if (googleMapView == null) {
             googleMapView = getMap();
         }
 
-        RealmList<Results> resultsRealmList = baseModel.getResults();
+        RealmList<Results> resultsRealmList = mapBaseModel.getResults();
         ArrayList<Marker> markers = new ArrayList<>();
         for (Results results : resultsRealmList) {
-            Log.d(TAG, " Fragment : Results Model : address : " + results.getFormattedAddress());
+            Log.d(TAG, " Fragment Map : fetchMapData : address : " + results.getFormattedAddress());
 
             Double lat = results.getGeometry().getPlaceLocation().getLatitude();
             Double lng = results.getGeometry().getPlaceLocation().getLongitude();
@@ -294,7 +256,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
             final String imageUrl = results.getIcon();
 
-            Log.d(TAG, " Fragment : Results Model : Location Icon : " + imageUrl);
+            Log.d(TAG, " Fragment Map : fetchMapData : Location Icon : " + imageUrl);
 
             final LatLng bbvaLatLon = new LatLng(lat, lng);
 
@@ -307,8 +269,10 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
             for (Marker m : markers) {
-//                PicassoMarker picassoMarker = new PicassoMarker(m);
-//                Picasso.with(getActivity()).load(imageUrl).into(picassoMarker);
+
+                m.hideInfoWindow();
+                m.showInfoWindow();
+
                 m.setVisible(false);
                 builder.include(m.getPosition());
             }
@@ -443,7 +407,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 //            mClusterImageView = (ImageView) multiProfile.findViewById(R.id.image);
 
             mImageView = new ImageView(MapsClusterDemoApplication.getInstance());
-            mDimension = (int) getResources().getDimension(R.dimen.custom_profile_image);
+            mDimension = (int) getResources().getDimension(R.dimen.custom_map_marker_image);
             mImageView.setLayoutParams(new ViewGroup.LayoutParams(mDimension, mDimension));
             int padding = (int) getResources().getDimension(R.dimen.custom_profile_padding);
             mImageView.setPadding(padding, padding, padding, padding);
@@ -454,8 +418,8 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
         protected void onBeforeClusterItemRendered(Results results, MarkerOptions markerOptions) {
             // Draw a single results.
             // Set the info window to show their name.
-            Log.d(TAG, "onResume : ClusterMapFragment : onBeforeClusterItemRendered : Status : " + results.getLocationName());
-            Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).into(mImageView);
+            Log.d(TAG, "ClusterMapFragment : onBeforeClusterItemRendered : Status : " + results.getLocationName());
+            Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).placeholder(R.drawable.ic_action_info).into(mImageView);
             Bitmap icon = mIconGenerator.makeIcon();
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(results.getLocationName());
         }
@@ -465,7 +429,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             // Draw multiple people.
             // Note: this method runs on the UI thread. Don't spend too much time in here (like in this example).
 //            List<Drawable> drawables = new ArrayList<Drawable>(Math.min(2, cluster.getSize()));
-            List<Drawable> drawables = new ArrayList<Drawable>(getMinClusterSize());
+            List<Drawable> drawables = new ArrayList<Drawable>(Math.min(2, cluster.getSize()));
             int width = mDimension;
             int height = mDimension;
 
@@ -476,6 +440,9 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
                 Drawable drawable = getResources().getDrawable(R.drawable.rectangle_shape);
                 drawable.setBounds(0, 0, width, height);
                 drawables.add(drawable);
+
+                Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).into(mImageView);
+
             }
             MultiDrawable multiDrawable = new MultiDrawable(drawables);
             multiDrawable.setBounds(0, 0, width, height);
@@ -503,6 +470,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
         // Create the builder to collect all essential cluster items for the bounds.
         LatLngBounds.Builder builder = LatLngBounds.builder();
+
         for (ClusterItem item : cluster.getItems()) {
             builder.include(item.getPosition());
         }
