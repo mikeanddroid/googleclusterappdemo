@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 public class Prefs {
 
     private static final String PRE_LOAD = "preLoad";
+    private static final String IS_DATA_SUCCESS = "IS_DATA_SUCCESS";
+    private static final String CURRENT_API_KEY = "CURRENT_API_KEY";
     private static final String PREFS_NAME = "mapsclusterdemo";
     private static Prefs instance;
     private final SharedPreferences sharedPreferences;
@@ -35,8 +37,26 @@ public class Prefs {
                 .apply();
     }
 
+    public void setDataSuccess(boolean isSuccess) {
+        sharedPreferences.edit().putBoolean(IS_DATA_SUCCESS, isSuccess).apply();
+    }
+
+    public void setCurrentApiKey(String currentApiKey) {
+        sharedPreferences.edit().putString(CURRENT_API_KEY, currentApiKey).apply();
+    }
+
+    public String getCurrentApiKey() {
+        return sharedPreferences.getString(CURRENT_API_KEY, "");
+    }
+
+    public boolean isSuccess() {
+        return sharedPreferences.getBoolean(IS_DATA_SUCCESS, false);
+    }
+
     public boolean getPreLoad() {
         return sharedPreferences.getBoolean(PRE_LOAD, false);
     }
+
+
 
 }

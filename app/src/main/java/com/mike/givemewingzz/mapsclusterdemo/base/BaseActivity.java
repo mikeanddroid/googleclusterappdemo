@@ -129,17 +129,13 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void afterTextChanged(Editable s) {
 
-                if (s.length() > 3) {
+                if (s.length() >= 4) {
 
                     Log.d(TAG, getClass().getSimpleName() + "afterTextChanged : " + materialSearchBar.getText());
 
-                    FetchSearchedLocations fetchSearchedLocations = new FetchSearchedLocations();
-                    fetchSearchedLocations.call(s.toString().trim(), new FetchSearchedLocations.OnResultsComplete() {
+                    FetchSearchedLocations.call(s.toString().trim(), new FetchSearchedLocations.OnResultsComplete() {
                         @Override
                         public void onResultsFetched(SearchInteractor.OnSearchFinished listener, BaseModel baseModel) {
-
-//                            MapListFragment.newInstance().setItems(baseModel);
-
                             clusterMapFragment.fetchMapData(baseModel);
                             clusterMapFragment.onDataComplete();
                         }

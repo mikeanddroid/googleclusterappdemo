@@ -29,7 +29,7 @@ public class FetchBBVAData {
 
         RetrofitInterface retrofitInterface = BaseClient.getBBSIClient();
 
-        Call<BaseModel> call = retrofitInterface.getBBVALocations(AppConstants.API_KEYS.MAP_API_KEY);
+        Call<BaseModel> call = retrofitInterface.getBBVALocations(AppConstants.API_KEYS.MAP_API_KEY_6);
         call.enqueue(new Callback<BaseModel>() {
             @Override
             public void onResponse(final Response<BaseModel> response, Retrofit retrofit) {

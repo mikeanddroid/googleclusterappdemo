@@ -8,6 +8,7 @@ import com.google.maps.android.clustering.ClusterItem;
 
 import java.util.Random;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
@@ -39,6 +40,8 @@ public class Results extends RealmObject implements ClusterItem {
     private String rating;
 
     private String reference;
+
+    private RealmList<Photos> photos;
 
     @Ignore
     private Random mRandom = new Random(1984);
@@ -113,6 +116,14 @@ public class Results extends RealmObject implements ClusterItem {
 
     public void setReference(String reference) {
         this.reference = reference;
+    }
+
+    public RealmList<Photos> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(RealmList<Photos> photos) {
+        this.photos = photos;
     }
 
     @Override

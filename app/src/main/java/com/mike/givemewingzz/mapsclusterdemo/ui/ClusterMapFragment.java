@@ -10,6 +10,9 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,10 +36,13 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 import com.mike.givemewingzz.mapsclusterdemo.R;
+import com.mike.givemewingzz.mapsclusterdemo.adapters.realmutils.RealmResultsAdapter;
+import com.mike.givemewingzz.mapsclusterdemo.adapters.realmutils.ResultsHorizontalAdapter;
 import com.mike.givemewingzz.mapsclusterdemo.base.AbsBaseFragment;
 import com.mike.givemewingzz.mapsclusterdemo.base.MapsClusterDemoApplication;
 import com.mike.givemewingzz.mapsclusterdemo.model.UIHandler;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.BaseModel;
+import com.mike.givemewingzz.mapsclusterdemo.model.data.Photos;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.Results;
 import com.mike.givemewingzz.mapsclusterdemo.presenter.ActionPresenter;
 import com.mike.givemewingzz.mapsclusterdemo.presenter.ActionPresenterImplementation;
@@ -54,12 +60,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.IMAGE_URL_KEY;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_ADDRESS_KEY;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_GEO_KEY;
+import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_IMAGE_REFERENCE;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_NAME_KEY;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_RATING_KEY;
 
@@ -82,6 +92,14 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
     private GoogleMap googleMapView;
 
+    @BindView(R.id.recycler_horizontal_view)
+    RecyclerView horizontalRecyclerView;
+
+    private StaggeredGridLayoutManager staggeredGridLayoutManager;
+    private LinearLayoutManager linearLayoutManager;
+
+    ResultsHorizontalAdapter resultsAdapter;
+
     public static ClusterMapFragment newInstance() {
         return new ClusterMapFragment();
     }
@@ -95,6 +113,17 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.map_abs_layout, container, false);
+
+        staggeredGridLayoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.HORIZONTAL);
+        linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+
+        ButterKnife.bind(this, view);
+
+        horizontalRecyclerView.setLayoutManager(linearLayoutManager);
+
+        setupRecyclerView();
 
         // Show PD by default
         progressDialog = new ProgressDialog(getActivity());
@@ -114,7 +143,21 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             }
         }, 400);
 
-        return inflater.inflate(R.layout.map_abs_layout, container, false);
+        Handler listHandler = new Handler();
+        listHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // refresh the realm instance
+                RealmController.with(getActivity()).refresh();
+
+                // get all persisted objects
+                // create the helper adapter and notify data set changes
+                // changes will be reflected automatically
+                setRealmAdapter(RealmController.with(getActivity()).getResults());
+            }
+        }, 400);
+
+        return view;
 
     }
 
@@ -175,10 +218,67 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
         super.onDestroy();
     }
 
+    private void setupRecyclerView() {
+        resultsAdapter = new ResultsHorizontalAdapter(getActivity());
+        horizontalRecyclerView.setAdapter(resultsAdapter);
+    }
+
+    public void setRealmAdapter(final RealmResults<Results> realmResults) {
+
+        RealmResultsAdapter realmResultsAdapter = new RealmResultsAdapter(realmResults);
+
+        if (resultsAdapter == null) {
+            resultsAdapter = new ResultsHorizontalAdapter(getActivity());
+        }
+
+        resultsAdapter.setEventListener(new ResultsHorizontalAdapter.EventListener() {
+            @Override
+            public void onItemClick(int position, Results results) {
+
+                // Create the builder to collect all essential cluster items for the bounds.
+                LatLngBounds.Builder builder = LatLngBounds.builder();
+
+                BaseModel baseModel = realm.where(BaseModel.class).findFirst();
+                List<Results> resultsList = baseModel.getResults();
+
+                //
+
+                // Move the camera instantly to Sydney with a zoom of 15.
+                googleMapView.moveCamera(CameraUpdateFactory.newLatLngZoom(resultsList.get(position).getPosition(), 15));
+
+                // Zoom in, animating the camera.
+                googleMapView.animateCamera(CameraUpdateFactory.zoomIn());
+
+                // Zoom out to zoom level 10, animating with a duration of 2 seconds.
+                googleMapView.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+
+                //
+
+//                builder.include(resultsList.get(position).getPosition());
+//
+//                // Get the LatLngBounds
+//                final LatLngBounds bounds = builder.build();
+//
+//                // Animate camera to the bounds
+//                try {
+//                    googleMapView.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+
+                presenter.onItemClicked(position);
+            }
+        });
+        resultsAdapter.setRealmAdapter(realmResultsAdapter);
+        resultsAdapter.notifyDataSetChanged();
+
+    }
+
     @Subscribe
     public void onResultSuccess(FetchBBVAData.SuccessEvent successEvent) {
         Log.d(TAG, "onResultSuccess : ClusterMapFragment : Status : " + successEvent.getBaseModel().getStatus());
         this.mapBaseModel = successEvent.getBaseModel();
+        setItems(mapBaseModel);
         progressDialog.hide();
     }
 
@@ -205,7 +305,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
                 onQueryExceeded();
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
                 alertDialogBuilder.setMessage("Query Limit Exceeded");
-                alertDialogBuilder.setCancelable(false);
+                alertDialogBuilder.setCancelable(true);
 
                 alertDialogBuilder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
@@ -263,11 +363,11 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
                 addItems();
                 mClusterManager.cluster();
             }
-        }, 1000);
+        }, 200);
 
         RealmList<Results> resultsRealmList = mapBaseModel.getResults();
         ArrayList<Marker> markers = new ArrayList<>();
-        for (Results results : resultsRealmList) {
+        for (final Results results : resultsRealmList) {
             Log.d(TAG, " Fragment Map : fetchMapData : address : " + results.getFormattedAddress());
 
             Double lat = results.getGeometry().getPlaceLocation().getLatitude();
@@ -320,11 +420,32 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
                 @Override
                 public void onInfoWindowClick(Marker marker) {
                     Intent detailsIntent = new Intent(getActivity(), MapLocationDetails.class);
-                    detailsIntent.putExtra(IMAGE_URL_KEY, imageUrl);
-                    detailsIntent.putExtra(LOCATION_GEO_KEY, marker.getPosition().toString());
-                    detailsIntent.putExtra(LOCATION_NAME_KEY, marker.getTitle());
-                    detailsIntent.putExtra(LOCATION_ADDRESS_KEY, formattedAddress);
-                    detailsIntent.putExtra(LOCATION_RATING_KEY, rating);
+                    detailsIntent.putExtra(IMAGE_URL_KEY, results.getIcon());
+                    detailsIntent.putExtra(LOCATION_GEO_KEY, results.getPosition().toString());
+                    detailsIntent.putExtra(LOCATION_NAME_KEY, results.getLocationName());
+                    detailsIntent.putExtra(LOCATION_ADDRESS_KEY, results.getFormattedAddress());
+                    detailsIntent.putExtra(LOCATION_RATING_KEY, results.getRating());
+
+                    String photoReference = null;
+
+                    List<Photos> photosList = results.getPhotos();
+                    if (photosList != null) {
+                        final int photosSize = photosList.size();
+                        for (int photos = 0; photos < photosSize; photos++) {
+
+                            if (photosList.get(photos) != null) {
+
+                                if (photosList.get(photos).getPhotoReference() != null) {
+                                    Log.d(TAG, "ClusterMapFragment : onBeforeClusterItemRendered : References : " + photosList.get(photos).getPhotoReference());
+                                    detailsIntent.putExtra(LOCATION_IMAGE_REFERENCE, photoReference);
+                                }
+
+                            }
+
+                        }
+
+                    }
+
                     getActivity().startActivity(detailsIntent);
                 }
             });
@@ -354,6 +475,43 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
     public void setItems(BaseModel items) {
         BaseModel baseModel = mapBaseModel;
         Log.d(TAG, " Fragment ClusterMapFragment: setItems : MVP : Status : " + baseModel.getStatus());
+
+        //
+
+        if (realm == null) {
+            realm = RealmController.with(getActivity()).getRealm();
+        }
+
+        RealmList<Results> resultsRealmList = null;
+        if (items != null) {
+            Log.d(TAG, " Fragment Cluster : Base Model : MVP : Status : " + items.getStatus());
+            resultsRealmList = items.getResults();
+        }
+
+        RealmResults<Results> realmResults = realm.where(Results.class).findAll();
+
+        if (resultsRealmList != null) {
+            for (Results results : resultsRealmList) {
+                Log.d(TAG, " Fragment Cluster : Results Model : MVP : address : " + results.getFormattedAddress());
+
+                final String locationTitle = results.getLocationName();
+                final String rating = results.getRating();
+                final String formattedAddress = results.getFormattedAddress();
+
+                final String imageUrl = results.getIcon();
+
+                Log.d(TAG, " Fragment Cluster : Results Model : Location Icon : " + imageUrl);
+                Log.d(TAG, " Fragment Cluster : Results Model : Location Title : " + locationTitle);
+                Log.d(TAG, " Fragment Cluster : Results Model : Location Rating : " + rating);
+                Log.d(TAG, " Fragment Cluster : Results Model : Location Address : " + formattedAddress);
+
+            }
+        }
+
+        setRealmAdapter(realmResults);
+
+        //
+
     }
 
     @Override
@@ -442,6 +600,24 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             // Draw a single results.
             // Set the info window to show their name.
             Log.d(TAG, "ClusterMapFragment : onBeforeClusterItemRendered : Status : " + results.getLocationName());
+
+            List<Photos> photosList = results.getPhotos();
+            if (photosList != null) {
+                final int photosSize = photosList.size();
+                for (int photos = 0; photos < photosSize; photos++) {
+
+                    if (photosList.get(photos) != null) {
+
+                        if (photosList.get(photos).getPhotoReference() != null) {
+                            Log.d(TAG, "ClusterMapFragment : onBeforeClusterItemRendered : References : " + photosList.get(photos).getPhotoReference());
+                        }
+
+                    }
+
+                }
+
+            }
+
             Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).placeholder(R.drawable.ic_action_info).into(mImageView);
             Bitmap icon = mIconGenerator.makeIcon();
             markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(results.getLocationName());
@@ -523,7 +699,12 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             Picasso.with(MapsClusterDemoApplication.getInstance()).load(results.getIcon()).into(new Target() {
                 @Override
                 public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                    marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                    try {
+                        marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                    } catch (Exception e) {
+
+                    }
+
                 }
 
                 @Override

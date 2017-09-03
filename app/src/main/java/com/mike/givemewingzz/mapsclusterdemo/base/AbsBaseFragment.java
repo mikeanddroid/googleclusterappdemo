@@ -121,7 +121,7 @@ public abstract class AbsBaseFragment extends Fragment implements OnMapReadyCall
             mMap.setMyLocationEnabled(true);
         }
 
-        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.getUiSettings().setCompassEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 

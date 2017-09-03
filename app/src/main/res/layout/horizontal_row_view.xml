@@ -1,0 +1,52 @@
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/horizontal_view_holder"
+    android:layout_width="80dp"
+    android:layout_height="80dp"
+    android:layout_margin="8dp"
+    android:background="@android:color/transparent"
+    android:elevation="8dp"
+    android:gravity="center">
+
+    <LinearLayout
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/circle"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/horizontal_location_name"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:ellipsize="end"
+            android:gravity="center|top"
+            android:maxLines="3"
+            android:paddingBottom="8dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
+            android:text="Something happened here"
+            android:textAppearance="@style/amu_Bubble.TextAppearance.Light"
+            android:textColor="@color/common_google_signin_btn_text_dark_default"
+            android:textSize="12dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/horizontal_location_rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:gravity="center"
+            android:text="rating"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="@color/colorAccent"
+            android:textSize="12dp" />
+
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
