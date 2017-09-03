@@ -19,10 +19,6 @@ import retrofit.Callback;
 import retrofit.Response;
 import retrofit.Retrofit;
 
-/**
- * Created by GiveMeWingzz on 8/31/2017.
- */
-
 public class FetchSearchedLocations {
 
     private static final String TAG = FetchSearchedLocations.class.getSimpleName();

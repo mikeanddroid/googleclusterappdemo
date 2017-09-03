@@ -6,10 +6,6 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 
-/**
- * Created by GiveMeWingzz on 8/24/2017.
- */
-
 public class SearchInterceptor {
 
     public static final String TAG = SearchInterceptor.class.getSimpleName();

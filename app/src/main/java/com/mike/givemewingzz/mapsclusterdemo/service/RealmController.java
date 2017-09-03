@@ -10,10 +10,6 @@ import com.mike.givemewingzz.mapsclusterdemo.model.data.Results;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-/**
- * Created by GiveMeWingzz on 8/28/2017.
- */
-
 public class RealmController {
 
     private static RealmController instance;

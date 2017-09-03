@@ -26,10 +26,6 @@ import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_NAME_KEY;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_RATING_KEY;
 
-/**
- * Created by GiveMeWingzz on 8/26/2017.
- */
-
 public class MapLocationDetails extends AppCompatActivity {
 
     private static final String TAG = MapLocationDetails.class.getSimpleName();

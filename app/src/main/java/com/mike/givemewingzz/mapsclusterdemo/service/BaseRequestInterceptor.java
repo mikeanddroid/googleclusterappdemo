@@ -5,9 +5,6 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 
-/**
- * Created by GiveMeWingzz on 11/29/2015.
- */
 public abstract class BaseRequestInterceptor implements Interceptor {
 
     /**

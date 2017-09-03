@@ -6,10 +6,6 @@ import com.mike.givemewingzz.mapsclusterdemo.utils.DBHelper;
 
 import io.realm.Realm;
 
-/**
- * Created by GiveMeWingzz on 8/24/2017.
- */
-
 public class MapsClusterDemoApplication extends Application {
 
     public static MapsClusterDemoApplication instance;

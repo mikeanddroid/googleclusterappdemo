@@ -37,10 +37,6 @@ import com.mike.givemewingzz.mapsclusterdemo.R;
 
 import static com.mike.givemewingzz.mapsclusterdemo.ui.MapFragment.LOCATION_REQUEST_ID;
 
-/**
- * Created by GiveMeWingzz on 8/29/2017.
- */
-
 public abstract class AbsBaseFragment extends Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private GoogleMap mMap;

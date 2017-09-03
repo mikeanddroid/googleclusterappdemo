@@ -3,10 +3,6 @@ package com.mike.givemewingzz.mapsclusterdemo.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-/**
- * Created by GiveMeWingzz on 8/28/2017.
- */
-
 public class Prefs {
 
     private static final String PRE_LOAD = "preLoad";

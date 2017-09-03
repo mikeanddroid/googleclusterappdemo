@@ -13,6 +13,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import com.mike.givemewingzz.mapsclusterdemo.R;
+import com.mike.givemewingzz.mapsclusterdemo.base.MapsClusterDemoApplication;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.BaseModel;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.Geometry;
 import com.mike.givemewingzz.mapsclusterdemo.model.data.Location;
@@ -98,6 +99,9 @@ public class ResultsHorizontalAdapter extends RealmRecyclerViewAdapter<Results> 
         holder.locationName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (realm == null) {
+                    realm = RealmController.with(MapsClusterDemoApplication.getInstance()).getRealm();
+                }
                 RealmResults<Results> realmResults = realm.where(Results.class).findAll();
                 Results r = realmResults.get(position);
                 eventListener.onItemClick(position, r);

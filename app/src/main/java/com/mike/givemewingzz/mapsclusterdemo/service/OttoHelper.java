@@ -3,10 +3,6 @@ package com.mike.givemewingzz.mapsclusterdemo.service;
 import com.squareup.otto.Bus;
 import com.squareup.otto.ThreadEnforcer;
 
-/**
- * Created by GiveMeWingzz on 8/25/2017.
- */
-
 public class OttoHelper {
 
     // Our singleton event bus.

@@ -4,10 +4,6 @@ import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
 
-/**
- * Created by GiveMeWingzz on 9/2/2017.
- */
-
 public class Photos extends RealmObject {
 
     @SerializedName("height")

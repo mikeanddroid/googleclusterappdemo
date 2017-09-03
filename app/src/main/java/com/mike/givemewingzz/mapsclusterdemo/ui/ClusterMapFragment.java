@@ -63,6 +63,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
@@ -72,11 +73,6 @@ import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_IMAGE_REFERENCE;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_NAME_KEY;
 import static com.mike.givemewingzz.mapsclusterdemo.utils.AppConstants.LOCATION_RATING_KEY;
-
-
-/**
- * Created by GiveMeWingzz on 8/29/2017.
- */
 
 public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, ClusterManager.OnClusterClickListener<Results>, ClusterManager.OnClusterInfoWindowClickListener<Results>, ClusterManager.OnClusterItemClickListener<Results>, ClusterManager.OnClusterItemInfoWindowClickListener<Results> {
 
@@ -89,6 +85,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
     private BaseModel mapBaseModel;
 
     protected Realm realm;
+    private RealmChangeListener realmListener;
 
     private GoogleMap googleMapView;
 
@@ -164,16 +161,6 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-//        FragmentManager fm = getChildFragmentManager();
-
-//        SupportMapFragment supportMapFragment = (SupportMapFragment) fm.findFragmentById(map_abs);
-//        if (supportMapFragment == null) {
-//            supportMapFragment = SupportMapFragment.newInstance();
-//            fm.beginTransaction().replace(R.id.map_container_fragment, supportMapFragment).commit();
-//            supportMapFragment.getMapAsync(this);
-//        }
-
     }
 
     @Override
@@ -186,31 +173,14 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
     public void onResume() {
         OttoHelper.register(this);
         presenter.onResume();
-
-//        BaseModel model = null;
-//        if (!Prefs.with(getActivity()).getPreLoad()) {
-//            model = RealmController.with(getActivity()).getBaseModel();
-//
-//            if (model != null) {
-//                Log.d(TAG, "onResume : ClusterMapFragment : Status : Pre-loaded CACHED " + model.getStatus());
-//                this.mapBaseModel = model;
-//            } else {
-//                Log.d(TAG, "onResume : ClusterMapFragment : Status : Pre-loaded NOT CACHED : Network Call");
-//                getResultsData();
-//            }
-//
-//        } else {
-//            Log.d(TAG, "onResume : ClusterMapFragment : NO PRELOAD : Status : NETWORK CALL");
-//            // Create default request for fetching bbva details
-//            getResultsData();
-//        }
-
         super.onResume();
     }
 
     @Override
     public void onDestroy() {
         if (realm != null) {
+            // Remove the listener.
+            realm.removeChangeListener(realmListener);
             realm.close();
         }
         presenter.onDestroy();
@@ -235,13 +205,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
             @Override
             public void onItemClick(int position, Results results) {
 
-                // Create the builder to collect all essential cluster items for the bounds.
-                LatLngBounds.Builder builder = LatLngBounds.builder();
-
-                BaseModel baseModel = realm.where(BaseModel.class).findFirst();
-                List<Results> resultsList = baseModel.getResults();
-
-                //
+                List<Results> resultsList = realm.where(BaseModel.class).findFirst().getResults();
 
                 // Move the camera instantly to Sydney with a zoom of 15.
                 googleMapView.moveCamera(CameraUpdateFactory.newLatLngZoom(resultsList.get(position).getPosition(), 15));
@@ -251,20 +215,6 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
 
                 // Zoom out to zoom level 10, animating with a duration of 2 seconds.
                 googleMapView.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
-
-                //
-
-//                builder.include(resultsList.get(position).getPosition());
-//
-//                // Get the LatLngBounds
-//                final LatLngBounds bounds = builder.build();
-//
-//                // Animate camera to the bounds
-//                try {
-//                    googleMapView.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
 
                 presenter.onItemClicked(position);
             }
@@ -278,6 +228,7 @@ public class ClusterMapFragment extends AbsBaseFragment implements UIHandler, Cl
     public void onResultSuccess(FetchBBVAData.SuccessEvent successEvent) {
         Log.d(TAG, "onResultSuccess : ClusterMapFragment : Status : " + successEvent.getBaseModel().getStatus());
         this.mapBaseModel = successEvent.getBaseModel();
+
         setItems(mapBaseModel);
         progressDialog.hide();
     }

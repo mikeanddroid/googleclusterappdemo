@@ -24,10 +24,6 @@ import com.squareup.picasso.Picasso;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
-/**
- * Created by GiveMeWingzz on 8/28/2017.
- */
-
 public class ResultsAdapter extends RealmRecyclerViewAdapter<Results> {
 
     private static final String TAG = ResultsAdapter.class.getSimpleName();

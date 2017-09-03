@@ -5,10 +5,6 @@ import android.support.v7.widget.RecyclerView;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmObject;
 
-/**
- * Created by GiveMeWingzz on 8/28/2017.
- */
-
 public abstract class RealmRecyclerViewAdapter<T extends RealmObject> extends RecyclerView.Adapter {
 
     private RealmBaseAdapter<T> realmBaseAdapter;
